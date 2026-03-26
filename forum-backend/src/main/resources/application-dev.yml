@@ -1,0 +1,37 @@
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:54321/forum_dev?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: postgres
+    password: pp7246147
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+# JWT 配置
+jwt:
+  secret: your-secret-key-at-least-256-bits-long-for-hs256-algorithm
+  access-token-expiration: 7200000  # 2小时
+  refresh-token-expiration: 604800000  # 7天
+  header: Authorization
+  prefix: "Bearer "
+
+# 微信配置
+wechat:
+  app-id: your-wechat-app-id
+  app-secret: your-wechat-app-secret
+  redirect-uri: http://localhost:3000/auth/wechat/callback
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.forum: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.beans: DEBUG
+    org.springframework.context: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n"
