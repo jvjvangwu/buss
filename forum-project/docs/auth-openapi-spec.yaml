@@ -1,0 +1,1069 @@
+openapi: 3.0.0
+info:
+  title: 论坛系统用户认证API
+  description: |
+    论坛系统的用户认证模块API接口文档。
+    提供用户注册、登录、登出、令牌管理等功能。
+  version: 1.0.0
+  contact:
+    name: API支持团队
+    email: api-support@forum.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3000/api
+    description: 开发环境
+  - url: https://api.forum.com/v1
+    description: 生产环境
+
+tags:
+  - name: 认证
+    description: 用户认证相关接口
+  - name: 用户
+    description: 用户信息管理接口
+  - name: 令牌
+    description: 令牌管理接口
+
+paths:
+  # ==================== 认证接口 ====================
+  /auth/register:
+    post:
+      tags:
+        - 认证
+      summary: 用户注册
+      description: 注册新用户账户
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+            examples:
+              basic:
+                summary: 基本注册
+                value:
+                  username: john_doe
+                  email: john@example.com
+                  password: Password123
+                  confirmPassword: Password123
+                  agreeToTerms: true
+      responses:
+        '201':
+          description: 注册成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: 用户名或邮箱已存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: 请求过于频繁
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/login:
+    post:
+      tags:
+        - 认证
+      summary: 用户登录
+      description: 用户登录获取访问令牌
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            examples:
+              basic:
+                summary: 基本登录
+                value:
+                  username: john_doe
+                  password: Password123
+                  rememberMe: true
+      responses:
+        '200':
+          description: 登录成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: 用户名或密码错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: 邮箱未验证
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '423':
+          description: 账户被锁定
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: 请求过于频繁
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/logout:
+    post:
+      tags:
+        - 认证
+      summary: 用户登出
+      description: 注销当前用户会话
+      operationId: logoutUser
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogoutRequest'
+      responses:
+        '200':
+          description: 登出成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/refresh:
+    post:
+      tags:
+        - 令牌
+      summary: 刷新令牌
+      description: 使用刷新令牌获取新的访问令牌
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        '200':
+          description: 令牌刷新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          description: 刷新令牌无效或过期
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ==================== 用户信息接口 ====================
+  /auth/me:
+    get:
+      tags:
+        - 用户
+      summary: 获取当前用户信息
+      description: 获取当前认证用户的详细信息
+      operationId: getCurrentUser
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '401':
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - 用户
+      summary: 更新用户信息
+      description: 更新当前用户的个人资料
+      operationId: updateUserProfile
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ==================== 密码管理接口 ====================
+  /auth/forgot-password:
+    post:
+      tags:
+        - 认证
+      summary: 忘记密码
+      description: 发送密码重置邮件
+      operationId: forgotPassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ForgotPasswordRequest'
+      responses:
+        '200':
+          description: 重置邮件已发送
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '404':
+          description: 邮箱未注册
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: 请求过于频繁
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/reset-password:
+    post:
+      tags:
+        - 认证
+      summary: 重置密码
+      description: 使用重置令牌设置新密码
+      operationId: resetPassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordRequest'
+      responses:
+        '200':
+          description: 密码重置成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: 重置令牌无效或过期
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ==================== 邮箱验证接口 ====================
+  /auth/verify-email:
+    post:
+      tags:
+        - 认证
+      summary: 验证邮箱
+      description: 验证用户邮箱地址
+      operationId: verifyEmail
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyEmailRequest'
+      responses:
+        '200':
+          description: 邮箱验证成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          description: 验证令牌无效
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/resend-verification:
+    post:
+      tags:
+        - 认证
+      summary: 重新发送验证邮件
+      description: 重新发送邮箱验证邮件
+      operationId: resendVerification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResendVerificationRequest'
+      responses:
+        '200':
+          description: 验证邮件已发送
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '404':
+          description: 邮箱未注册
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: 请求过于频繁
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ==================== 会话管理接口 ====================
+  /auth/sessions:
+    get:
+      tags:
+        - 令牌
+      summary: 获取用户会话列表
+      description: 获取当前用户的所有活跃会话
+      operationId: getUserSessions
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionsResponse'
+        '401':
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/sessions/{sessionId}:
+    delete:
+      tags:
+        - 令牌
+      summary: 终止会话
+      description: 终止指定的用户会话
+      operationId: terminateSession
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 会话终止成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: 会话不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+# ==================== 安全方案 ====================
+securitySchemes:
+  BearerAuth:
+    type: http
+    scheme: bearer
+    bearerFormat: JWT
+    description: |
+      使用JWT令牌进行认证。
+      格式: `Authorization: Bearer <token>`
+
+# ==================== 组件定义 ====================
+components:
+  schemas:
+    # ==================== 请求体 ====================
+    RegisterRequest:
+      type: object
+      required:
+        - username
+        - email
+        - password
+        - confirmPassword
+        - agreeToTerms
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 20
+          pattern: '^[a-zA-Z0-9_]+$'
+          example: john_doe
+          description: 用户名 (3-20个字符，字母数字下划线)
+        email:
+          type: string
+          format: email
+          maxLength: 100
+          example: john@example.com
+          description: 邮箱地址
+        password:
+          type: string
+          minLength: 8
+          example: Password123
+          description: 密码 (至少8个字符)
+        confirmPassword:
+          type: string
+          example: Password123
+          description: 确认密码
+        agreeToTerms:
+          type: boolean
+          example: true
+          description: 同意服务条款
+        displayName:
+          type: string
+          maxLength: 50
+          example: John Doe
+          description: 显示名称 (可选)
+        inviteCode:
+          type: string
+          example: INVITE123
+          description: 邀请码 (可选)
+
+    LoginRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          example: john_doe
+          description: 用户名或邮箱
+        password:
+          type: string
+          example: Password123
+          description: 密码
+        rememberMe:
+          type: boolean
+          example: true
+          description: 记住登录状态
+        deviceId:
+          type: string
+          example: device-123
+          description: 设备ID (可选)
+        deviceName:
+          type: string
+          example: Chrome on Windows
+          description: 设备名称 (可选)
+
+    LogoutRequest:
+      type: object
+      properties:
+        refreshToken:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+          description: 刷新令牌 (可选，用于撤销刷新令牌)
+
+    RefreshTokenRequest:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+          description: 刷新令牌
+
+    ForgotPasswordRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+          example: john@example.com
+          description: 注册邮箱
+
+    ResetPasswordRequest:
+      type: object
+      required:
+        - token
+        - password
+        - confirmPassword
+      properties:
+        token:
+          type: string
+          example: reset_token_123
+          description: 密码重置令牌
+        password:
+          type: string
+          minLength: 8
+          example: NewPassword123
+          description: 新密码
+        confirmPassword:
+          type: string
+          example: NewPassword123
+          description: 确认新密码
+
+    VerifyEmailRequest:
+      type: object
+      required:
+        - token
+      properties:
+        token:
+          type: string
+          example: verify_token_123
+          description: 邮箱验证令牌
+
+    ResendVerificationRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+          example: john@example.com
+          description: 注册邮箱
+
+    UpdateProfileRequest:
+      type: object
+      properties:
+        displayName:
+          type: string
+          maxLength: 50
+          example: John Smith
+          description: 显示名称
+        avatar:
+          type: string
+          format: uri
+          example: https://example.com/avatar.jpg
+          description: 头像URL
+        bio:
+          type: string
+          maxLength: 500
+          example: 热爱编程的开发者
+          description: 个人简介
+        currentPassword:
+          type: string
+          example: CurrentPassword123
+          description: 当前密码 (修改密码时需要)
+        newPassword:
+          type: string
+          minLength: 8
+          example: NewPassword123
+          description: 新密码 (修改密码时需要)
+        confirmNewPassword:
+          type: string
+          example: NewPassword123
+          description: 确认新密码 (修改密码时需要)
+
+    # ==================== 响应体 ====================
+    SuccessResponse:
+      type: object
+      required:
+        - success
+        - message
+        - timestamp
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: 操作成功
+        data:
+          type: object
+          nullable: true
+        timestamp:
+          type: string
+          format: date-time
+          example: 2024-01-01T12:00:00.000Z
+
+    ErrorResponse:
+      type: object
+      required:
+        - success
+        - message
+        - error
+        - timestamp
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: 请求参数验证失败
+        error:
+          type: object
+          required:
+            - code
+            - details
+          properties:
+            code:
+              type: string
+              example: VALIDATION_ERROR
+            details:
+              type: string
+              example: 用户名格式不正确
+            field:
+              type: string
+              example: username
+        timestamp:
+          type: string
+          format: date-time
+          example: 2024-01-01T12:00:00.000Z
+
+    RegisterResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              required:
+                - userId
+                - username
+                - email
+                - emailVerified
+                - createdAt
+              properties:
+                userId:
+                  type: string
+                  format: uuid
+                  example: 550e8400-e29b-41d4-a716-446655440000
+                username:
+                  type: string
+                  example: john_doe
+                email:
+                  type: string
+                  format: email
+                  example: john@example.com
+                emailVerified:
+                  type: boolean
+                  example: false
+                createdAt:
+                  type: string
+                  format: date-time
+                  example: 2024-01-01T12:00:00.000Z
+                requiresEmailVerification:
+                  type: boolean
+                  example: true
+
+    LoginResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              required:
+                - token
+                - user
+              properties:
+                token:
+                  $ref: '#/components/schemas/TokenInfo'
+                user:
+                  $ref: '#/components/schemas/User'
+
+    TokenResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/TokenInfo'
+
+    UserResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/User'
+
+    SessionsResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              required:
+                - sessions
+                - currentSessionId
+              properties:
+                sessions:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Session'
+                currentSessionId:
+                  type: string
+                  format: uuid
+                  example: 550e8400-e29b-41d4-a716-446655440000
+
+    # ==================== 数据模型 ====================
+    TokenInfo:
+      type: object
+      required:
+        - token
+        - refreshToken
+        - expiresIn
+        - tokenType
+      properties:
+        token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+          description: 访问令牌
+        refreshToken:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+          description: 刷新令牌
+        expiresIn:
+          type: integer
+          example: 3600
+          description: 令牌有效期 (秒)
+        tokenType:
+          type: string
+          enum: [Bearer]
+          example: Bearer
+          description: 令牌类型
+
+    User:
+      type: object
+      required:
+        - id
+        - username
+        - email
+        - emailVerified
+        - role
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+        username:
+          type: string
+          example: john_doe
+        email:
+          type: string
+          format: email
+          example: john@example.com
+        displayName:
+          type: string
+          example: John Doe
+        avatar:
+          type: string
+          format: uri
+          example: https://example.com/avatar.jpg
+        bio:
+          type: string
+          example: 热爱编程的开发者
+        emailVerified:
+          type: boolean
+          example: true
+        role:
+          type: string
+          enum: [user, moderator, admin]
+          example: user
+        status:
+          type: string
+          enum: [active, suspended, banned, inactive]
+          example: active
+        createdAt:
+          type: string
+          format: date-time
+          example: 2024-01-01T12:00:00.000Z
+        updatedAt:
+          type: string
+          format: date-time
+          example: 2024-01-01T12:00:00.000Z
+        lastLoginAt:
+          type: string
+          format: date-time
+          example: 2024-01-01T12:00:00.000Z
+        stats:
+          $ref: '#/components/schemas/UserStats'
+
+    UserStats:
+      type: object
+      properties:
+        postCount:
+          type: integer
+          example: 42
+          description: 发帖数
+        commentCount:
+          type: integer
+          example: 156
+          description: 评论数
+        likeCount:
+          type: integer
+          example: 320
+          description: 获赞数
+        followerCount:
+          type: integer
+          example: 89
+          description: 粉丝数
+        followingCount:
+          type: integer
+          example: 45
+          description: 关注数
+        reputation:
+          type: integer
+          example: 1250
+          description: 声望值
+
+    Session:
+      type: object
+      required:
+        - id
+        - device
+        - createdAt
+        - lastActiveAt
+        - expiresAt
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+        device:
+          $ref: '#/components/schemas/DeviceInfo'
+        createdAt:
+          type: string
+          format: date-time
+          example: 2024-01-01T12:00:00.000Z
+        lastActiveAt:
+          type: string
+          format: date-time
+          example: 2024-01-01T12:00:00.000Z
+        expiresAt:
+          type: string
+          format: date-time
+          example: 2024-01-08T12:00:00.000Z
+
+    DeviceInfo:
+      type: object
+      required:
+        - id
+        - name
+        - type
+        - lastActiveAt
+        - currentDevice
+      properties:
+        id:
+          type: string
+          example: device-123
+        name:
+          type: string
+          example: Chrome on Windows
+        type:
+          type: string
+          enum: [web, mobile, desktop, tablet, unknown]
+          example: web
+        os:
+          type: string
+          example: Windows 10
+        browser:
+          type: string
+          example: Chrome 120.0.0.0
+        lastActiveAt:
+          type: string
+          format: date-time
+          example: 2024-01-01T12:00:00.000Z
+        currentDevice:
+          type: boolean
+          example: true
+
+  # ==================== 响应示例 ====================
+  examples:
+    ValidationErrorExample:
+      summary: 验证错误示例
+      value:
+        success: false
+        message: 请求参数验证失败
+        error:
+          code: VALIDATION_ERROR
+          details: 用户名格式不正确
+          field: username
+        timestamp: 2024-01-01T12:00:00.000Z
+
+    UnauthorizedErrorExample:
+      summary: 未认证错误示例
+      value:
+        success: false
+        message: 未提供认证令牌
+        error:
+          code: TOKEN_REQUIRED
+          details: 请先登录
+        timestamp: 2024-01-01T12:00:00.000Z
+
+    TokenExpiredErrorExample:
+      summary: 令牌过期错误示例
+      value:
+        success: false
+        message: 令牌已过期
+        error:
+          code: TOKEN_EXPIRED
+          details: 请重新登录
+        timestamp: 2024-01-01T12:00:00.000Z
+
+    InvalidCredentialsErrorExample:
+      summary: 无效凭证错误示例
+      value:
+        success: false
+        message: 用户名或密码错误
+        error:
+          code: INVALID_CREDENTIALS
+          details: 提供的凭证无效
+        timestamp: 2024-01-01T12:00:00.000Z
+
+    EmailNotVerifiedErrorExample:
+      summary: 邮箱未验证错误示例
+      value:
+        success: false
+        message: 请先验证您的邮箱
+        error:
+          code: EMAIL_NOT_VERIFIED
+          details: 邮箱未验证，请检查您的收件箱
+        timestamp: 2024-01-01T12:00:00.000Z
+
+    RateLimitErrorExample:
+      summary: 速率限制错误示例
+      value:
+        success: false
+        message: 请求过于频繁
+        error:
+          code: RATE_LIMIT_EXCEEDED
+          details: 请稍后重试
+        timestamp: 2024-01-01T12:00:00.000Z
+
+  # ==================== 参数定义 ====================
+  parameters:
+    PageParam:
+      name: page
+      in: query
+      description: 页码 (从1开始)
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    LimitParam:
+      name: limit
+      in: query
+      description: 每页数量
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    SortByParam:
+      name: sortBy
+      in: query
+      description: 排序字段
+      required: false
+      schema:
+        type: string
+        enum: [createdAt, updatedAt, username, email]
+        default: createdAt
+    SortOrderParam:
+      name: sortOrder
+      in: query
+      description: 排序顺序
+      required: false
+      schema:
+        type: string
+        enum: [asc, desc]
+        default: desc
+
+  # ==================== 安全方案 ====================
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        使用JWT令牌进行认证。
+        格式: `Authorization: Bearer <token>`
+
+# ==================== 扩展信息 ====================
+x-tagGroups:
+  - name: 核心功能
+    tags:
+      - 认证
+      - 用户
+  - name: 高级功能
+    tags:
+      - 令牌
+
+x-logo:
+  url: https://forum.com/logo.png
+  altText: 论坛系统Logo
+
+externalDocs:
+  description: 了解更多关于论坛系统的信息
+  url: https://docs.forum.com
