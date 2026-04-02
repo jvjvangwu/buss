@@ -1,7 +1,11 @@
-import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse } from 'axios';
-import { ElMessage } from 'element-plus';
-import { useUserStore } from '@/stores/user';
-import router from '@/router';
+import axios, {
+  type AxiosInstance,
+  type AxiosRequestConfig,
+  type AxiosResponse,
+} from "axios";
+import { ElMessage } from "element-plus";
+import { useUserStore } from "@/stores/user";
+import router from "@/router";
 
 // 统一响应格式
 interface ApiResponse<T = any> {
@@ -22,10 +26,10 @@ interface PageResponse<T = any> {
 
 // 创建 axios 实例
 const service: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api/v1',
+  baseURL: import.meta.env.VITE_API_BASE_URL || "/api",
   timeout: 30000,
   headers: {
-    'Content-Type': 'application/json;charset=UTF-8',
+    "Content-Type": "application/json;charset=UTF-8",
   },
 });
 
@@ -33,30 +37,36 @@ const service: AxiosInstance = axios.create({
 service.interceptors.request.use(
   (config) => {
     const userStore = useUserStore();
-    if (userStore.token) {
+    if (userStore.token && userStore.token !== "") {
       config.headers.Authorization = `Bearer ${userStore.token}`;
     }
     return config;
   },
   (error) => {
-    console.error('请求错误:', error);
+    console.error("请求错误:", error);
     return Promise.reject(error);
-  }
+  },
 );
 
 // 响应拦截器
 service.interceptors.response.use(
-  (response: AxiosResponse<ApiResponse>) => {
+  (response: AxiosResponse) => {
     const { data } = response;
 
-    // 成功响应
-    if (data.code === 200 || data.code === 201) {
-      return data.data;
-    }
+    // 检查是否是统一响应格式
+    if (typeof data === 'object' && data !== null && 'code' in data) {
+      // 成功响应
+      if (data.code === 200 || data.code === 201) {
+        return data.data;
+      }
 
-    // 业务错误
-    ElMessage.error(data.message || '请求失败');
-    return Promise.reject(new Error(data.message || '请求失败'));
+      // 业务错误
+      ElMessage.error(data.message || "请求失败");
+      return Promise.reject(new Error(data.message || "请求失败"));
+    } else {
+      // 直接返回数据（适用于后端直接返回对象的情况）
+      return data;
+    }
   },
   (error) => {
     const { response } = error;
@@ -66,30 +76,30 @@ service.interceptors.response.use(
 
       switch (status) {
         case 401:
-          // 未授权，清除用户信息并跳转登录
+          // 未授权，清除用户信息并跳转新闻首页
           const userStore = useUserStore();
           userStore.clearUser();
-          router.push({ name: 'Login' });
-          ElMessage.error('登录已过期，请重新登录');
+          router.push({ name: "PublicNewsHome" });
+          ElMessage.error("登录已过期，请重新登录");
           break;
         case 403:
-          ElMessage.error('无权限访问');
+          ElMessage.error("无权限访问");
           break;
         case 404:
-          ElMessage.error('请求的资源不存在');
+          ElMessage.error("请求的资源不存在");
           break;
         case 500:
-          ElMessage.error('服务器内部错误');
+          ElMessage.error("服务器内部错误");
           break;
         default:
-          ElMessage.error(data?.message || '请求失败');
+          ElMessage.error(data?.message || "请求失败");
       }
     } else {
-      ElMessage.error('网络错误，请检查网络连接');
+      ElMessage.error("网络错误，请检查网络连接");
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 // 封装请求方法
@@ -98,15 +108,27 @@ const request = {
     return service.get(url, config);
   },
 
-  post<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+  post<T = any>(
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig,
+  ): Promise<T> {
     return service.post(url, data, config);
   },
 
-  put<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+  put<T = any>(
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig,
+  ): Promise<T> {
     return service.put(url, data, config);
   },
 
-  patch<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+  patch<T = any>(
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig,
+  ): Promise<T> {
     return service.patch(url, data, config);
   },
 

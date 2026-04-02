@@ -1,0 +1,21 @@
+-- 更新新闻表结构
+-- 创建时间: 2026-04-02
+
+-- 修改字段名和类型
+ALTER TABLE news RENAME COLUMN cover TO cover_image;
+ALTER TABLE news RENAME COLUMN published_at TO publish_at;
+ALTER TABLE news ALTER COLUMN is_top TYPE BOOLEAN USING is_top::boolean;
+
+-- 添加缺少的字段
+ALTER TABLE news ADD COLUMN like_count INT DEFAULT 0;
+ALTER TABLE news ADD COLUMN comment_count INT DEFAULT 0;
+ALTER TABLE news ADD COLUMN is_hot BOOLEAN DEFAULT false;
+ALTER TABLE news ADD COLUMN is_original BOOLEAN DEFAULT true;
+ALTER TABLE news ADD COLUMN source VARCHAR(200);
+ALTER TABLE news ADD COLUMN source_url VARCHAR(500);
+ALTER TABLE news ADD COLUMN audit_status SMALLINT DEFAULT 0;
+ALTER TABLE news ADD COLUMN audit_by BIGINT;
+ALTER TABLE news ADD COLUMN audit_at TIMESTAMP;
+ALTER TABLE news ADD COLUMN audit_remark VARCHAR(500);
+ALTER TABLE news ADD COLUMN created_by BIGINT;
+ALTER TABLE news ADD COLUMN updated_by BIGINT;

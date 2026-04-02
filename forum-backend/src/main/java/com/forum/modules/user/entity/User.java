@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
  * 用户实体
  */
 @Data
-@TableName("users")
+@TableName("sys_user")
 public class User {
 
     /**
@@ -35,11 +35,6 @@ public class User {
     private String email;
 
     /**
-     * 手机号
-     */
-    private String phone;
-
-    /**
      * 昵称
      */
     private String nickname;
@@ -53,11 +48,6 @@ public class User {
      * 性别：0-未知，1-男，2-女
      */
     private Integer gender;
-
-    /**
-     * 生日
-     */
-    private LocalDate birthday;
 
     /**
      * 个人简介
@@ -78,11 +68,6 @@ public class User {
      * 状态：0-禁用，1-正常，2-待激活
      */
     private Integer status;
-
-    /**
-     * 邮箱是否验证
-     */
-    private Boolean emailVerified;
 
     /**
      * 最后登录时间
@@ -107,18 +92,8 @@ public class User {
     private LocalDateTime updatedAt;
 
     /**
-     * 软删除时间
+     * 逻辑删除：0-未删除，其他-已删除
      */
-    @TableLogic(value = "NULL", delval = "NOW()")
-    private LocalDateTime deletedAt;
-
-    /**
-     * 创建人ID
-     */
-    private Long createdBy;
-
-    /**
-     * 更新人ID
-     */
-    private Long updatedBy;
+    @TableLogic(value = "0", delval = "1")
+    private Integer deleted;
 }

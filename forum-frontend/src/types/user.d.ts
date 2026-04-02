@@ -60,4 +60,10 @@ interface UpdateUserParams {
   bio?: string;
 }
 
-export type { UserInfo, UserListItem, UserQueryParams, CreateUserParams, UpdateUserParams };
+export type {
+  UserInfo,
+  UserListItem,
+  UserQueryParams,
+  CreateUserParams,
+  UpdateUserParams,
+};

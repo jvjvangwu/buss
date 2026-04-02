@@ -131,10 +131,10 @@ public class News {
     private LocalDateTime updatedAt;
 
     /**
-     * 软删除时间
+     * 软删除标记
      */
-    @TableLogic(value = "NULL", delval = "NOW()")
-    private LocalDateTime deletedAt;
+    @TableLogic(value = "0", delval = "1")
+    private Integer deleted;
 
     /**
      * 创建人ID

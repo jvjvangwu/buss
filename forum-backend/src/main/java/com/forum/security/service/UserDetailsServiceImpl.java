@@ -1,38 +1,46 @@
 package com.forum.security.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.forum.modules.user.entity.User;
+import com.forum.modules.user.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
-/**
- * 用户详情服务实现
- * TODO: 对接实际的用户查询服务
- */
 @Service
 @RequiredArgsConstructor
 public class UserDetailsServiceImpl implements UserDetailsService {
 
-    // TODO: 注入 UserService 或 UserMapper
+    private final UserService userService;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        // TODO: 从数据库查询用户信息
-        // User user = userService.getByUsername(username);
-        // if (user == null) {
-        //     throw new UsernameNotFoundException("用户不存在: " + username);
-        // }
+        User user = userService.getByUsername(username);
+        if (user == null) {
+            throw new UsernameNotFoundException("用户不存在: " + username);
+        }
 
-        // 临时实现：返回一个默认用户
-        // 实际项目中应该从数据库查询用户信息
-        return User.builder()
-                .username(username)
-                .password("")
-                .authorities(Collections.emptyList())
+        if (user.getStatus() != 1) {
+            throw new UsernameNotFoundException("账号已被禁用: " + username);
+        }
+
+        List<String> permissions = userService.getUserPermissions(user.getId());
+        List<SimpleGrantedAuthority> authorities = permissions.stream()
+                .map(SimpleGrantedAuthority::new)
+                .collect(Collectors.toList());
+
+        return org.springframework.security.core.userdetails.User.builder()
+                .username(user.getUsername())
+                .password(user.getPassword())
+                .authorities(authorities)
+                .accountLocked(user.getStatus() != 1)
+                .disabled(user.getStatus() != 1)
                 .build();
     }
 }

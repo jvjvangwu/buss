@@ -67,9 +67,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref } from "vue";
 
-const hotTags = ref(['ChatGPT', 'GPT-4', '人工智能', '新能源', '元宇宙', '区块链']);
+const hotTags = ref([
+  "ChatGPT",
+  "GPT-4",
+  "人工智能",
+  "新能源",
+  "元宇宙",
+  "区块链",
+]);
 </script>
 
 <style scoped lang="scss">

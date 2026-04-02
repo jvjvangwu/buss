@@ -1,28 +1,28 @@
-import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
-import type { UserInfo } from '@/types/user';
+import { defineStore } from "pinia";
+import { ref, computed } from "vue";
+import type { UserInfo } from "@/types/user";
 
-export const useUserStore = defineStore('user', () => {
+export const useUserStore = defineStore("user", () => {
   // 状态
-  const token = ref<string>(localStorage.getItem('accessToken') || '');
-  const refreshToken = ref<string>(localStorage.getItem('refreshToken') || '');
+  const token = ref<string>(localStorage.getItem("accessToken") || "");
+  const refreshToken = ref<string>(localStorage.getItem("refreshToken") || "");
   const userInfo = ref<UserInfo | null>(null);
   const permissions = ref<string[]>([]);
   const roles = ref<string[]>([]);
 
   // 计算属性
   const isLoggedIn = computed(() => !!token.value);
-  const username = computed(() => userInfo.value?.username || '');
-  const nickname = computed(() => userInfo.value?.nickname || '');
-  const avatar = computed(() => userInfo.value?.avatar || '');
+  const username = computed(() => userInfo.value?.username || "");
+  const nickname = computed(() => userInfo.value?.nickname || "");
+  const avatar = computed(() => userInfo.value?.avatar || "");
 
   // 设置 Token
   function setToken(accessToken: string, refresh?: string) {
     token.value = accessToken;
-    localStorage.setItem('accessToken', accessToken);
+    localStorage.setItem("accessToken", accessToken);
     if (refresh) {
       refreshToken.value = refresh;
-      localStorage.setItem('refreshToken', refresh);
+      localStorage.setItem("refreshToken", refresh);
     }
   }
 
@@ -45,13 +45,13 @@ export const useUserStore = defineStore('user', () => {
 
   // 清除用户信息
   function clearUser() {
-    token.value = '';
-    refreshToken.value = '';
+    token.value = "";
+    refreshToken.value = "";
     userInfo.value = null;
     permissions.value = [];
     roles.value = [];
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
   }
 
   return {
